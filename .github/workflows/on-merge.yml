@@ -25,3 +25,13 @@ jobs:
 
             -   name: Build with Gradle Wrapper
                 run: ./gradlew build
+                
+            -   name: Setup k3s config
+                run: |
+                    mkdir -p ~/.kube
+                    echo "${{ secrets.K3S_CONFIG }}" > ~/.kube/config
+                    chmod 600 ~/.kube/config
+
+            -   name: K3s get pods
+                run: |
+                    kubectl get pods --all-namespaces
