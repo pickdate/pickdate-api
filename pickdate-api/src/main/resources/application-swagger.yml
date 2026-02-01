@@ -1,0 +1,13 @@
+# swagger config
+springdoc:
+  swagger-ui:
+    enabled: true
+    csrf:
+      enabled: false
+    persistAuthorization: true
+    tryItOutEnabled: true
+    displayOperationId: true
+
+  api-docs:
+    enabled: true
+
