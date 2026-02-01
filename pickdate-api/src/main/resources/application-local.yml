@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: pickdate
+
+  session:
+    jdbc:
+      initialize-schema: never
+
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        show_sql: true
+
+  datasource:
+    url: jdbc:postgresql://${PICKDATE_DATABASE_URL:localhost:5432/pickdate}
+    username: ${PICKDATE_DATABASE_USER:root}
+    password: ${PICKDATE_DATABASE_PASS:pass}
+    name: pickdate
+    hikari:
+      maximum-pool-size: 20
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+REMOTE_DEBUG_ENABLED: TRUE

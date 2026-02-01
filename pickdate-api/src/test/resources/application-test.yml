@@ -1,0 +1,12 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+    banner-mode: off
+    lazy-initialization: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        show_sql: true
