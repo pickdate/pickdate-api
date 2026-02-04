@@ -1,6 +1,4 @@
-#FROM bellsoft/liberica-runtime-container:jre-25-cds-glibc
-FROM eclipse-temurin:25-jre
-RUN useradd -r -u 10001 appuser
+FROM bellsoft/liberica-runtime-container:jre-25-cds-glibc
 
 WORKDIR /app
 
