@@ -4,15 +4,39 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  prepare-env:
+    name: Prepare environment
     runs-on: self-hosted
     permissions:
-      contents: write
-      packages: write
+      contents: read
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+      version_tag: ${{ steps.semver.outputs.version_tag }}
     env:
       INCLUDE_SLOW_TESTS: "true"
-      IMAGE_NAME: ghcr.io/rk-d3v/pickdate-api
-      IMAGE_TAG: ${{ github.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup semantic version
+        id: semver
+        uses: paulhatch/semantic-version@v5.4.0
+        with:
+          major_pattern: "/!:|BREAKING CHANGE:/"
+          minor_pattern: "/feat(\\(.+\\))?:/"
+          version_format: "${major}.${minor}.${patch}"
+
+  build-code:
+    name: Build code
+    runs-on: self-hosted
+    needs: [ prepare-env ]
+    permissions:
+      contents: read
+    env:
+      INCLUDE_SLOW_TESTS: "true"
 
     steps:
       - uses: actions/checkout@v4
@@ -27,16 +51,44 @@ jobs:
         with:
           validate-wrappers: false
 
-      - name: Build
-        run: ./gradlew build -x test
-
-      - name: Tests
+      - name: Test
         run: ./gradlew test --info --stacktrace
+
+      - name: Build JAR
+        run: ./gradlew bootJar
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: build/libs/*.jar
+          if-no-files-found: error
+
+  build-image:
+    name: Build Docker image
+    runs-on: self-hosted
+    needs: [ build-code, prepare-env ]
+    permissions:
+      contents: read
+      packages: write
+    env:
+      INCLUDE_SLOW_TESTS: "true"
+      IMAGE_NAME: ghcr.io/rk-d3v/pickdate-api
+      IMAGE_TAG: ${{ needs.prepare-env.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: build/libs
 
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-      - name: Build and push image
+      - name: Build and push image (version + latest)
         run: |
           docker build \
             -t "${IMAGE_NAME}:${IMAGE_TAG}" \
@@ -45,27 +97,43 @@ jobs:
           docker push "${IMAGE_NAME}:${IMAGE_TAG}"
           docker push "${IMAGE_NAME}:latest"
 
-      - name: Setup k3s config
+  deploy:
+    name: Deploy
+    runs-on: self-hosted
+    needs: [ build-image, prepare-env ]
+    permissions:
+      contents: read
+    env:
+      IMAGE_NAME: ghcr.io/rk-d3v/pickdate-api
+      IMAGE_TAG: ${{ needs.prepare-env.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup deploy config
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.K3S_CONFIG }}" > ~/.kube/config
           chmod 600 ~/.kube/config
 
-      - name: Apply pickdate-api secret (test)
+      - name: Apply secrets
         run: |
           kubectl -n pickdate-test create secret generic pickdate-api-secret \
             --from-literal=database-user="${{ secrets.TEST_PICKDATE_DATABASE_USER }}" \
             --from-literal=database-password="${{ secrets.TEST_PICKDATE_DATABASE_PASS }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Checkout infra repo
+      - name: Checkout infrastructure
         uses: actions/checkout@v4
         with:
           repository: rk-d3v/pickdate-infra
           path: infra
           token: ${{ secrets.INFRA_REPO_TOKEN }}
 
-      - name: Apply infra manifests
+      - name: Apply manifests
         run: |
           kubectl apply -k infra/k8s/overlays/test
 
@@ -73,3 +141,27 @@ jobs:
         run: |
           kubectl -n pickdate-test set image deployment/pickdate-api pickdate-api="${IMAGE_NAME}:${IMAGE_TAG}"
           kubectl -n pickdate-test rollout status deployment/pickdate-api --timeout=180s
+
+  tag-release:
+    name: Create tag
+    runs-on: self-hosted
+    needs: [ deploy, prepare-env ]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and push git tag
+        run: |
+          TAG="v${{ needs.prepare-env.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping."
+            exit 0
+          fi
+          git tag -a "$TAG" -m "$TAG"
+          git push origin "$TAG"

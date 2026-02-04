@@ -4,14 +4,14 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
+  build-code:
+    if: ${{ github.event.pull_request.head.repo.fork == false }}
+    name: Build code
     runs-on: self-hosted
     permissions:
       contents: read
     env:
       INCLUDE_SLOW_TESTS: "true"
-
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 25
@@ -25,11 +25,11 @@ jobs:
         with:
           validate-wrappers: false
 
-      - name: Build
-        run: ./gradlew build -x test
-
-      - name: Tests
+      - name: Test
         run: ./gradlew test --info --stacktrace
+
+      - name: Build JAR
+        run: ./gradlew bootJar
 
   dependency-submission:
     if: ${{ github.event.pull_request.head.repo.fork == false }}
