@@ -3,6 +3,14 @@ on:
   push:
     branches: [ "main" ]
 
+concurrency:
+  group: main-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  INCLUDE_SLOW_TESTS: "true"
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/pickdate-api
+
 jobs:
   prepare-env:
     name: Prepare environment
@@ -11,9 +19,6 @@ jobs:
       contents: read
     outputs:
       version: ${{ steps.semver.outputs.version }}
-      version_tag: ${{ steps.semver.outputs.version_tag }}
-    env:
-      INCLUDE_SLOW_TESTS: "true"
 
     steps:
       - name: Checkout
@@ -35,8 +40,6 @@ jobs:
     needs: [ prepare-env ]
     permissions:
       contents: read
-    env:
-      INCLUDE_SLOW_TESTS: "true"
 
     steps:
       - uses: actions/checkout@v4
@@ -45,6 +48,7 @@ jobs:
         with:
           java-version: '25'
           distribution: 'liberica'
+          cache: "gradle"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
@@ -73,7 +77,6 @@ jobs:
       packages: write
     env:
       INCLUDE_SLOW_TESTS: "true"
-      IMAGE_NAME: ghcr.io/rk-d3v/pickdate-api
       IMAGE_TAG: ${{ needs.prepare-env.outputs.version }}
 
     steps:
@@ -92,14 +95,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
 
-      - name: Build and push image (version + latest)
-        run: |
-          docker build \
-            -t "${IMAGE_NAME}:${IMAGE_TAG}" \
-            -t "${IMAGE_NAME}:latest" \
-            .
-          docker push "${IMAGE_NAME}:${IMAGE_TAG}"
-          docker push "${IMAGE_NAME}:latest"
+      - name: Build and push (version + latest)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy:
     name: Deploy
@@ -108,7 +113,6 @@ jobs:
     permissions:
       contents: read
     env:
-      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/pickdate-api
       IMAGE_TAG: ${{ needs.prepare-env.outputs.version }}
 
     steps:
@@ -130,12 +134,22 @@ jobs:
             --from-literal=database-password="${{ secrets.TEST_PICKDATE_DATABASE_PASS }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Generate token for infra repo
+        id: infra-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.INFRA_APP_ID }}
+          private-key: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
+          owner: pickdate
+          repositories: pickdate-infra
+
       - name: Checkout infrastructure
         uses: actions/checkout@v4
         with:
-          repository: rk-d3v/pickdate-infra
+          repository: pickdate/pickdate-infra
           path: infra
-          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          token: ${{ steps.infra-token.outputs.token }}
+          persist-credentials: false
 
       - name: Apply manifests
         run: |
@@ -143,7 +157,7 @@ jobs:
 
       - name: Deploy to k3s
         run: |
-          kubectl -n pickdate-test set image deployment/pickdate-api pickdate-api="${IMAGE_NAME}:${IMAGE_TAG}"
+          kubectl -n pickdate-test set image deployment/pickdate-api pickdate-api="${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
           kubectl -n pickdate-test rollout status deployment/pickdate-api --timeout=180s
 
   tag-release:
