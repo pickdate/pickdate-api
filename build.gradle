@@ -108,7 +108,8 @@ hibernate {
     enhancement {
         enableDirtyTracking = true
         enableAssociationManagement = true
-        enableExtendedEnhancement = true
+        enableLazyInitialization = false
+        enableExtendedEnhancement = false
     }
 }
 
