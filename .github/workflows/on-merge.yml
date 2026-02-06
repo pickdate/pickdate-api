@@ -50,16 +50,26 @@ jobs:
           distribution: 'liberica'
           cache: "gradle"
 
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: |
+            ${{ runner.os }}-sonar
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
         with:
           validate-wrappers: false
 
-      - name: Test
-        run: ./gradlew test --info --stacktrace
-
-      - name: Build JAR
-        run: ./gradlew bootJar
+      - name: Build
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+          SONAR_ORGANIZATION: pickdate
+          SONAR_PROJECT_KEY: pickdate_pickdate-api
+        run: ./gradlew clean build jacocoTestReport --info --stacktrace
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

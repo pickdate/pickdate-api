@@ -4,44 +4,61 @@ on:
     branches: [ "main" ]
     types: [ opened, synchronize, reopened ]
 
-
 concurrency:
-  group: main-${{ github.ref }}
+  group: pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-env:
-  INCLUDE_SLOW_TESTS: "true"
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/pickdate-api
-
 jobs:
-  prepare-env:
-    name: Prepare environment
+  build-code:
+    if: ${{ github.event.pull_request.head.repo.fork == false }}
+    name: Build code
     runs-on: self-hosted
     permissions:
       contents: read
-    outputs:
-      version: ${{ steps.semver.outputs.version }}
-
+    env:
+      INCLUDE_SLOW_TESTS: "true"
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: https://sonarcloud.io
+      SONAR_ORGANIZATION: pickdate
+      SONAR_PROJECT_KEY: pickdate_pickdate-api
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup semantic version
-        id: semver
-        uses: paulhatch/semantic-version@v5.4.0
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
         with:
-          major_pattern: "/!:|BREAKING CHANGE:/"
-          minor_pattern: "/feat(\\(.+\\))?:/"
-          version_format: "${major}.${minor}.${patch}"
+          java-version: '25'
+          distribution: 'liberica'
+          cache: "gradle"
 
-  build-code:
-    name: Build code
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+        with:
+          validate-wrappers: false
+
+      - name: Test
+        run: ./gradlew clean build jacocoTestReport --info --stacktrace
+
+      - name: SonarCloud scan
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  dependency-submission:
+    if: ${{ github.event.pull_request.head.repo.fork == false }}
+
     runs-on: self-hosted
-    needs: [ prepare-env ]
     permissions:
-      contents: read
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -50,138 +67,7 @@ jobs:
         with:
           java-version: '25'
           distribution: 'liberica'
-          cache: "gradle"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
-        with:
-          validate-wrappers: false
-
-      - name: Test
-        run: ./gradlew test --info --stacktrace
-
-      - name: Build JAR
-        run: ./gradlew bootJar
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-jar
-          path: build/libs/*.jar
-          if-no-files-found: error
-
-  build-image:
-    name: Build Docker image
-    runs-on: self-hosted
-    needs: [ build-code, prepare-env ]
-    permissions:
-      contents: read
-      packages: write
-    env:
-      INCLUDE_SLOW_TESTS: "true"
-      IMAGE_TAG: ${{ needs.prepare-env.outputs.version }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: app-jar
-          path: build/libs
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-
-      - name: Build and push (version + latest)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-            ${{ env.IMAGE_NAME }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy:
-    name: Deploy
-    runs-on: self-hosted
-    needs: [ build-image, prepare-env ]
-    permissions:
-      contents: read
-    env:
-      IMAGE_TAG: ${{ needs.prepare-env.outputs.version }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup deploy config
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.K3S_CONFIG }}" > ~/.kube/config
-          chmod 600 ~/.kube/config
-
-      - name: Apply secrets
-        run: |
-          kubectl -n pickdate-test create secret generic pickdate-api-secret \
-            --from-literal=database-user="${{ secrets.TEST_PICKDATE_DATABASE_USER }}" \
-            --from-literal=database-password="${{ secrets.TEST_PICKDATE_DATABASE_PASS }}" \
-            --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Generate token for infra repo
-        id: infra-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.INFRA_APP_ID }}
-          private-key: ${{ secrets.INFRA_APP_PRIVATE_KEY }}
-          owner: pickdate
-          repositories: pickdate-infra
-
-      - name: Checkout infrastructure
-        uses: actions/checkout@v4
-        with:
-          repository: pickdate/pickdate-infra
-          path: infra
-          token: ${{ steps.infra-token.outputs.token }}
-          persist-credentials: false
-
-      - name: Apply manifests
-        run: |
-          kubectl apply -k infra/k8s/overlays/test
-
-      - name: Deploy to k3s
-        run: |
-          kubectl -n pickdate-test set image deployment/pickdate-api pickdate-api="${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
-          kubectl -n pickdate-test rollout status deployment/pickdate-api --timeout=180s
-
-  tag-release:
-    name: Create tag
-    runs-on: self-hosted
-    needs: [ deploy, prepare-env ]
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Create and push git tag
-        run: |
-          TAG="v${{ needs.prepare-env.outputs.version }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping."
-            exit 0
-          fi
-          git tag -a "$TAG" -m "$TAG"
-          git push origin "$TAG"
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+        continue-on-error: true
