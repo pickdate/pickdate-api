@@ -71,6 +71,9 @@ jobs:
           SONAR_PROJECT_KEY: pickdate_pickdate-api
         run: ./gradlew clean build jacocoTestReport --info --stacktrace
 
+      - name: SonarCloud scan
+        uses: SonarSource/sonarqube-scan-action@v7
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
