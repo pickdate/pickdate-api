@@ -6,14 +6,10 @@ spring:
     compose:
       lifecycle-management: start_and_stop
 
-  modulith:
-    runtime:
-      verification-enabled: true
-
   jpa:
     generate-ddl: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     properties:
       hibernate:
         jdbc:
