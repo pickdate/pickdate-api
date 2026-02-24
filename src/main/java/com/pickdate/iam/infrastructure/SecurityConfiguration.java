@@ -7,12 +7,14 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.pickdate.iam.domain.ApplicationSetupUseCase;
 import com.pickdate.iam.domain.KeyProperties;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,11 +42,12 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
 import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -81,12 +84,14 @@ class SecurityConfiguration {
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers(ALLOW_LIST).permitAll()
                         .anyRequest().authenticated())
-                .exceptionHandling((exceptions) -> exceptions
-                        .defaultAuthenticationEntryPointFor(
-                                new LoginUrlAuthenticationEntryPoint("/login"),
-                                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
-                        )
-                )
+                .exceptionHandling(exceptions -> {
+                    // returns 401
+                    var unauthorized = new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED);
+                    RequestMatcher mediaTypeMatcher = new MediaTypeRequestMatcher(MediaType.APPLICATION_JSON);
+                    exceptions
+                            .defaultAuthenticationEntryPointFor(unauthorized, mediaTypeMatcher)
+                            .authenticationEntryPoint(unauthorized);
+                })
                 .oauth2ResourceServer((oauth2) -> oauth2.jwt(withDefaults()))
         ;
 
@@ -124,8 +129,11 @@ class SecurityConfiguration {
                         .requestMatchers("/api/v1/**").hasAuthority("USER")
                         .anyRequest().authenticated()
                 )
-                // Form login handles the redirect to the login page from the
-                // authorization server filter chain
+                // return 401
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
+                )
                 .formLogin(form -> form
                         .loginPage("/login").permitAll()
                         .failureHandler((request, response, exception) -> {
