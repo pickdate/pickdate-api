@@ -19,11 +19,14 @@ class ApplicationSetupConfiguration {
     private String rememberMeKey;
 
     @Bean
-    public ApplicationSetupUseCase applicationSetupUseCase(ApplicationSetupRepository repository, UserRepository userRepository) {
+    public ApplicationSetupUseCase applicationSetupUseCase(
+            ApplicationSetupRepository repository,
+            UserRepository userRepository
+    ) {
         return new ApplicationSetupService(
                 repository,
                 userRepository,
-                new EncryptorDelegate(Encryptor.noop()),
+                encryptor(),
                 keyProperties()
         );
     }
@@ -31,5 +34,10 @@ class ApplicationSetupConfiguration {
     @Bean
     public KeyProperties keyProperties() {
         return new KeyProperties(masterKey, rememberMeKey);
+    }
+
+    @Bean
+    public Encryptor encryptor() {
+        return new EncryptorDelegate(Encryptor.noop());
     }
 }

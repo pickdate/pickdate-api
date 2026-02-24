@@ -49,7 +49,7 @@ jobs:
         run: ./gradlew clean build jacocoTestReport --info --stacktrace
 
       - name: SonarCloud scan
-        if: ${{ github.actor != 'dependabot[bot]' && secrets.SONAR_TOKEN != '' }}
+        if: ${{ github.actor != 'dependabot[bot]' }}
         uses: SonarSource/sonarqube-scan-action@v7
 
   dependency-submission:
