@@ -15,7 +15,7 @@ class IdentifierSpec extends Specification {
         def identifier = Identifier.of(str)
 
         then:
-        identifier.value() == str
+        identifier.value == str
     }
 
     def "should be able to generate random Identifier"() {
@@ -23,7 +23,7 @@ class IdentifierSpec extends Specification {
         def identifier = Identifier.generate()
 
         then:
-        identifier.value()
+        identifier.value
     }
 
     def "should not be able to create Identifier from blank string"() {

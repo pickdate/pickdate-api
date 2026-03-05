@@ -17,10 +17,10 @@ class PasswordAttributeConverter implements AttributeConverter<Password, String>
     @Override
     public String convertToDatabaseColumn(Password password) {
         if (password == null) return null;
-        if (password.value() == null || password.value().isBlank()) return null;
-        if (password.isHashed()) return password.value();
+        if (password.getValue() == null || password.getValue().isBlank()) return null;
+        if (password.isHashed()) return password.getValue();
 
-        return encoder.encode(password.value());
+        return encoder.encode(password.getValue());
     }
 
     @Override

@@ -2,6 +2,8 @@ package com.pickdate.iam.domain;
 
 import java.util.List;
 
+import static com.pickdate.bootstrap.domain.Value.valueOrNull;
+
 
 public record UserData(
         String id,
@@ -11,8 +13,8 @@ public record UserData(
 
     public static UserData from(User user) {
         return new UserData(
-                user.getId().value(),
-                user.getEmail().value(),
+                valueOrNull(user.getId()),
+                valueOrNull(user.getEmail()),
                 user.getAuthoritiesAsString()
         );
     }

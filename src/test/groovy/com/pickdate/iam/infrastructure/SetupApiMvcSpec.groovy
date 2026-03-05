@@ -1,7 +1,7 @@
 package com.pickdate.iam.infrastructure
 
 import com.pickdate.bootstrap.exception.InternalServerError
-import com.pickdate.iam.domain.ApplicationSetupUseCase
+import com.pickdate.iam.application.ApplicationSetupUseCase
 import com.pickdate.test.mapper.JsonMapper
 import com.pickdate.test.type.MvcSpec
 import org.spockframework.spring.SpringBean

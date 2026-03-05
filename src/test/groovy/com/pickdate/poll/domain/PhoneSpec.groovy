@@ -58,6 +58,11 @@ class PhoneSpec extends Specification {
 
     def "should trim whitespaces"() {
         expect:
-        new Phone("  1234567  ").value() == "1234567"
+        Phone.of("  1234567  ").value == "1234567"
+    }
+
+    def "should create empty phone object"() {
+        expect:
+        Phone.ofNullable(null) == Phone.EMPTY
     }
 }

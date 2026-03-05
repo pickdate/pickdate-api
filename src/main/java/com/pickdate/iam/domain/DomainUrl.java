@@ -4,7 +4,9 @@ import com.pickdate.bootstrap.domain.Value;
 import com.pickdate.bootstrap.validation.Assert;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import lombok.Getter;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static com.pickdate.bootstrap.validation.Matchers.isValidPort;
@@ -12,7 +14,7 @@ import static com.pickdate.bootstrap.validation.Matchers.oneRegexOf;
 import static java.util.regex.Pattern.compile;
 
 
-public record DomainUrl(String value) implements Value<String> {
+public class DomainUrl implements Value<String> {
 
     private static final int MAX_LENGTH = 255;
 
@@ -28,13 +30,20 @@ public record DomainUrl(String value) implements Value<String> {
             "https?://(www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()!@:%_+.~#?&/=]*)"
     );
 
+    @Getter
+    private String value;
+
+    DomainUrl() {
+    }
+
     public DomainUrl(String value) {
-        this.value = value == null ? null : value.strip();
-        validate(this.value);
+        this.value = value;
     }
 
     public static DomainUrl of(String value) {
-        return new DomainUrl(value);
+        var newVal = value == null ? null : value.strip();
+        validate(newVal);
+        return new DomainUrl(newVal);
     }
 
     public static void validate(@Nullable String value) {
@@ -64,5 +73,17 @@ public record DomainUrl(String value) implements Value<String> {
     @Override
     public @Nonnull String toString() {
         return value == null ? "null" : value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof DomainUrl that)) return false;
+        return Objects.equals(this.value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 }

@@ -1,7 +1,7 @@
 package com.pickdate.iam.infrastructure;
 
+import com.pickdate.bootstrap.domain.Email;
 import com.pickdate.bootstrap.domain.Identifier;
-import com.pickdate.iam.domain.Email;
 import com.pickdate.iam.domain.User;
 import com.pickdate.iam.domain.UserRepository;
 import org.jspecify.annotations.NonNull;

@@ -21,6 +21,6 @@ class DescriptionSpec extends Specification {
         def desc = Description.of(someDescription)
 
         then:
-        desc.value() == someDescription
+        desc.value == someDescription
     }
 }

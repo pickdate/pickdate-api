@@ -49,8 +49,8 @@ public class Authority {
 
     @Override
     public final boolean equals(Object o) {
+        if (o == this) return true;
         if (!(o instanceof Authority auth)) return false;
-
         return Objects.equals(authority, auth.authority);
     }
 

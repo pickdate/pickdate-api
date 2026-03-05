@@ -1,6 +1,6 @@
 package com.pickdate.iam.infrastructure;
 
-import com.pickdate.iam.domain.ApplicationSetupUseCase;
+import com.pickdate.iam.application.ApplicationSetupUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;

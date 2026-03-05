@@ -15,7 +15,7 @@ class TitleSpec extends Specification {
 
         then:
         title != null
-        title.value() == value
+        title.value == value
     }
 
     def "should trim input before validation and storage"() {
@@ -23,7 +23,7 @@ class TitleSpec extends Specification {
         def title = Title.of("   Sprint Review   ")
 
         then:
-        title.value() == "Sprint Review"
+        title.value == "Sprint Review"
     }
 
     def "should not allow blank or null title"() {
@@ -60,8 +60,8 @@ class TitleSpec extends Specification {
         def maxOk = "x" * 255
 
         expect:
-        Title.of(minOk).value() == minOk
-        Title.of(maxOk).value() == maxOk
+        Title.of(minOk).value == minOk
+        Title.of(maxOk).value == maxOk
     }
 
     def "should reject values exceeding max length"() {

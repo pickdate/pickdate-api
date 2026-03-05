@@ -1,10 +1,10 @@
 package com.pickdate.iam.infrastructure
 
 import com.pickdate.bootstrap.domain.Identifier
+import com.pickdate.iam.application.UserUseCase
 import com.pickdate.iam.domain.User
 import com.pickdate.iam.domain.UserData
 import com.pickdate.iam.domain.UserNotFoundException
-import com.pickdate.iam.domain.UserUseCase
 import com.pickdate.test.mapper.JsonMapper
 import com.pickdate.test.type.MvcSpec
 import org.spockframework.spring.SpringBean
@@ -21,7 +21,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
-
 
 @Requires({ it.env['INCLUDE_SLOW_TESTS'] == 'true' })
 class UserApiMvcSpec extends MvcSpec implements JsonMapper {
@@ -54,8 +53,8 @@ class UserApiMvcSpec extends MvcSpec implements JsonMapper {
 
         and:
         def map = toMap(response)
-        map.content.any { it.email == admin.email.value() }
-        map.content.any { it.email == user.email.value() }
+        map.content.any { it.email == admin.email.value }
+        map.content.any { it.email == user.email.value }
     }
 
     def "should return user by id"() {
@@ -63,21 +62,21 @@ class UserApiMvcSpec extends MvcSpec implements JsonMapper {
         def user = SOME_USER
 
         when:
-        def response = mvc.perform(get("/api/v1/iam/users/${user.id.value()}"))
+        def response = mvc.perform(get("/api/v1/iam/users/${user.id.value}"))
                 .andDo(print())
                 .andReturn()
                 .getResponse()
 
         then:
-        1 * userUseCase.getUserById(user.id.value()) >> user
+        1 * userUseCase.getUserById(user.id.value) >> user
 
         and:
         response.status == 200
 
         and:
         def userData = toObject(response.contentAsString, UserData)
-        userData.id() == user.id.value()
-        userData.email() == user.email.value()
+        userData.id() == user.id.value
+        userData.email() == user.email.value
         userData.authorities().contains("USER")
     }
 
@@ -139,13 +138,13 @@ class UserApiMvcSpec extends MvcSpec implements JsonMapper {
         def id = Identifier.generate()
 
         when:
-        def response = mvc.perform(get("/api/v1/iam/users/${id.value()}"))
+        def response = mvc.perform(get("/api/v1/iam/users/${id.value}"))
                 .andDo(print())
                 .andReturn()
                 .getResponse()
 
         then:
-        1 * userUseCase.getUserById(id.value()) >> { throw UserNotFoundException.withId(id.value()) }
+        1 * userUseCase.getUserById(id.value) >> { throw UserNotFoundException.withId(id.value) }
 
         and:
         response.status == 404
@@ -161,7 +160,7 @@ class UserApiMvcSpec extends MvcSpec implements JsonMapper {
         and:
         with(body.invalidParams[0] as Map<String, String>) {
             name == "id"
-            value == id.value()
+            value == id.value
             reason == "User not found"
         }
     }

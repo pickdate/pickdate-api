@@ -1,6 +1,6 @@
 package com.pickdate.iam.infrastructure
 
-import com.pickdate.test.stub.UserUseCaseTestConfig
+import com.pickdate.iam.application.UserUseCaseTestConfig
 import org.springframework.data.domain.Pageable
 import spock.lang.Specification
 
@@ -30,7 +30,7 @@ class UserApiIntegrationSpec extends Specification {
 
     def "should get user by id"() {
         given:
-        def id = SOME_ADMIN.id.value()
+        def id = SOME_ADMIN.id.value
 
         when:
         def responseEntity = userApi.getById(id)
@@ -42,7 +42,7 @@ class UserApiIntegrationSpec extends Specification {
 
     def "should create a new user account"() {
         given:
-        def email = "newEmail@email.com"
+        def email = "newemail@email.com"
         def pass = "superSecretPassword!"
         def request = new CreateUserRequest(email, pass)
 

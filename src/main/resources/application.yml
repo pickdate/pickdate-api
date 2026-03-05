@@ -12,12 +12,13 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
+        default_schema: pickdate
         jdbc:
           time_zone: UTC
         show_sql: false
 
   datasource:
-    url: jdbc:postgresql://${PICKDATE_DATABASE_URL:localhost:5432/pickdate}
+    url: jdbc:postgresql://${PICKDATE_DATABASE_URL:localhost:5432/pickdate}?currentSchema=pickdate
     username: ${PICKDATE_DATABASE_USER:root}
     password: ${PICKDATE_DATABASE_PASS:pass}
     name: pickdate
@@ -28,6 +29,9 @@ spring:
     enabled: true
     baseline-on-migrate: true
     validate-on-migrate: true
+    schemas: pickdate
+    default-schema: pickdate
+    create-schemas: true
 
 logback:
   log:

@@ -7,7 +7,7 @@ class TimezoneSpec extends Specification {
 
     def "should throw exception when value is null or blank"() {
         when:
-        new Timezone("")
+        Timezone.of("")
 
         then:
         thrown(IllegalValueException)
@@ -15,7 +15,7 @@ class TimezoneSpec extends Specification {
 
     def "should throw exception when value is illegal"() {
         when:
-        new Timezone("abc")
+        Timezone.of("abc")
 
         then:
         thrown(IllegalValueException)
@@ -23,7 +23,7 @@ class TimezoneSpec extends Specification {
 
     def "should create timezone when value is correct"() {
         when:
-        new Timezone(value)
+        Timezone.of(value)
 
         then:
         notThrown(IllegalValueException)

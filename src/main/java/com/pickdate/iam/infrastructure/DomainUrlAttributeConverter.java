@@ -10,7 +10,7 @@ class DomainUrlAttributeConverter implements AttributeConverter<DomainUrl, Strin
 
     @Override
     public String convertToDatabaseColumn(DomainUrl domainUrl) {
-        return domainUrl == null ? null : domainUrl.value();
+        return domainUrl == null ? null : domainUrl.getValue();
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.pickdate.iam.infrastructure
 
-import com.pickdate.test.stub.ApplicationSetupUseCaseTestConfig
+import com.pickdate.iam.application.ApplicationSetupUseCaseTestConfig
 import spock.lang.Specification
 import spock.lang.Subject
 

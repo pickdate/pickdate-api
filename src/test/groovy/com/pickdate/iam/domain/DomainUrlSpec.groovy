@@ -25,7 +25,7 @@ class DomainUrlSpec extends Specification {
 
     def "should trim whitespaces"() {
         expect:
-        new DomainUrl("https://example.com  ").value() == "https://example.com"
+        DomainUrl.of("https://example.com  ").value == "https://example.com"
     }
 
     def "should accept valid domains"() {

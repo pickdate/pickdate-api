@@ -1,0 +1,49 @@
+package com.pickdate.ops.problem.infrastructure;
+
+import com.pickdate.bootstrap.exception.Problem;
+import com.pickdate.ops.problem.application.ProblemLogUseCase;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+
+@RestController
+@RequestMapping("/api/v1/ops/problems")
+@AllArgsConstructor
+@Tag(name = "Problems", description = "Problem and error reporting endpoints")
+@SecurityRequirement(name = "basicAuth")
+class ProblemLogApi {
+
+    private final ProblemLogUseCase problemLogUseCase;
+
+    @ApiResponses(value = @ApiResponse(
+            responseCode = "200",
+            description = "Successful list of problems",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "Page<Problem> example",
+                            summary = "Paginated problems response",
+                            value = ProblemLogApiConst.PROBLEMS_EXAMPLE_JSON)
+            )
+    ))
+    @GetMapping
+    @Operation(summary = "List problems", description = "Lists application problems and error reports")
+    public Page<Problem> getProblems(@ParameterObject Pageable pageable) {
+        var problemEntities = problemLogUseCase.getProblems(pageable);
+        return problemEntities.map(ProblemLogEventMapper::toProblem);
+    }
+
+
+}

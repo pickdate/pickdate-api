@@ -28,8 +28,8 @@ class UserAuthentication implements UserDetails, CredentialsContainer {
 
     static UserDetails from(User user) {
         return new UserAuthentication()
-                .withEmail(user.getEmail().value())
-                .withPassword(user.getPassword().value())
+                .withEmail(user.getEmail().getValue())
+                .withPassword(user.getPassword().getValue())
                 .withAuthorities(user.getAuthorities().stream()
                         .map(authority -> new SimpleGrantedAuthority(authority.value()))
                         .collect(toSet())

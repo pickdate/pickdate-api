@@ -1,5 +1,6 @@
 package com.pickdate.iam.domain;
 
+import com.pickdate.bootstrap.domain.Email;
 import com.pickdate.bootstrap.domain.Identifier;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -30,7 +31,7 @@ public class User {
     @EmbeddedId
     private Identifier id = Identifier.generate();
 
-    @Column(name = "email", columnDefinition = "citext")
+    @Column(name = "email")
     private Email email;
 
     @Column(name = "password")

@@ -1,7 +1,7 @@
 package com.pickdate.test.fixture
 
+import com.pickdate.bootstrap.domain.Email
 import com.pickdate.iam.domain.Authority
-import com.pickdate.iam.domain.Email
 import com.pickdate.iam.domain.Password
 import com.pickdate.iam.domain.User
 

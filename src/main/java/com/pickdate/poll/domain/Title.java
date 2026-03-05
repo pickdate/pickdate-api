@@ -4,20 +4,30 @@ import com.pickdate.bootstrap.domain.Value;
 import com.pickdate.bootstrap.validation.Assert;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import lombok.Getter;
+
+import java.util.Objects;
 
 
-public record Title(String value) implements Value<String> {
+public class Title implements Value<String> {
 
     private static final int MIN_LENGTH = 3;
     private static final int MAX_LENGTH = 255;
 
-    public Title(String value) {
-        this.value = value == null ? null : value.strip();
-        validate(this.value);
+    @Getter
+    private String value;
+
+    Title() {
+    }
+
+    private Title(String value) {
+        this.value = value;
     }
 
     public static Title of(String value) {
-        return new Title(value);
+        var newValue = value == null ? null : value.strip();
+        validate(newValue);
+        return new Title(newValue);
     }
 
     public static void validate(@Nullable String value) {
@@ -30,5 +40,17 @@ public record Title(String value) implements Value<String> {
     @Override
     public @Nonnull String toString() {
         return value == null ? "null" : value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof Title that)) return false;
+        return Objects.equals(this.value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 }

@@ -1,7 +1,7 @@
 package com.pickdate.iam.infrastructure;
 
 
-import com.pickdate.iam.domain.Email;
+import com.pickdate.bootstrap.domain.Email;
 import com.pickdate.iam.domain.Password;
 import com.pickdate.iam.domain.User;
 

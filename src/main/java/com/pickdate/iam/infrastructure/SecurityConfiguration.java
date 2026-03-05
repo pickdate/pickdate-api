@@ -5,7 +5,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import com.pickdate.iam.domain.ApplicationSetupUseCase;
+import com.pickdate.iam.application.ApplicationSetupUseCase;
 import com.pickdate.iam.domain.KeyProperties;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -88,8 +88,7 @@ class SecurityConfiguration {
                     // returns 401
                     var unauthorized = new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED);
                     RequestMatcher mediaTypeMatcher = new MediaTypeRequestMatcher(MediaType.APPLICATION_JSON);
-                    exceptions
-                            .defaultAuthenticationEntryPointFor(unauthorized, mediaTypeMatcher)
+                    exceptions.defaultAuthenticationEntryPointFor(unauthorized, mediaTypeMatcher)
                             .authenticationEntryPoint(unauthorized);
                 })
                 .oauth2ResourceServer((oauth2) -> oauth2.jwt(withDefaults()))
@@ -125,17 +124,21 @@ class SecurityConfiguration {
 
                             return new AuthorizationDecision(isAdmin);
                         })
-                        .requestMatchers("/api/v1/iam/**").hasAuthority("ADMIN")
+                        .requestMatchers(
+                                "/api/v1/iam/**",
+                                "/api/v1/ops/**"
+                        ).hasAuthority("ADMIN")
                         .requestMatchers("/api/v1/**").hasAuthority("USER")
                         .anyRequest().authenticated()
                 )
                 // return 401
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) ->
-                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
+                                .authenticationEntryPoint((request, response, authException) ->
+                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
                 )
                 .formLogin(form -> form
                         .loginPage("/login").permitAll()
+                        .authenticationDetailsSource(new RequestDetailsSource())
                         .failureHandler((request, response, exception) -> {
                             var defaultFailureHandler = new SimpleUrlAuthenticationFailureHandler("/login?error");
                             var redirectStrategy = new DefaultRedirectStrategy();

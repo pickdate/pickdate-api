@@ -2,11 +2,21 @@ package com.pickdate.bootstrap.domain
 
 
 import com.pickdate.bootstrap.exception.IllegalValueException
-import com.pickdate.iam.domain.Email
 import spock.lang.Specification
 
 
 class EmailSpec extends Specification {
+
+    def "should normalize email to lowercase so different letter case results in the same value"() {
+        when:
+        def lower = Email.of("test@example.com")
+        def upped = Email.of("TEST@EXAMPLE.COM")
+
+        then:
+        lower.value == "test@example.com"
+        upped.value == "test@example.com"
+        lower == upped
+    }
 
     def "should throw exception when email is null"() {
         when:
@@ -61,6 +71,11 @@ class EmailSpec extends Specification {
 
     def "should trim whitespaces"() {
         expect:
-        new Email("test@example.com  ").value() == "test@example.com"
+        Email.of("test@example.com  ").value == "test@example.com"
+    }
+
+    def "should create empty email object"() {
+        expect:
+        Email.ofNullable(null) == Email.EMPTY
     }
 }

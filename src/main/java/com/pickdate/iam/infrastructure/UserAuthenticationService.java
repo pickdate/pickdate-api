@@ -1,6 +1,6 @@
 package com.pickdate.iam.infrastructure;
 
-import com.pickdate.iam.domain.Email;
+import com.pickdate.bootstrap.domain.Email;
 import com.pickdate.iam.domain.UserNotFoundException;
 import com.pickdate.iam.domain.UserRepository;
 import lombok.RequiredArgsConstructor;

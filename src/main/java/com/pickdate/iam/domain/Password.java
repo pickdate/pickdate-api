@@ -53,6 +53,11 @@ record PlaintextPassword(String value) implements Password {
     public @Nonnull String toString() {
         return value == null ? "null" : value;
     }
+
+    @Override
+    public String getValue() {
+        return value;
+    }
 }
 
 record HashedPassword(String value) implements Password {
@@ -78,5 +83,10 @@ record HashedPassword(String value) implements Password {
     @Override
     public @Nonnull String toString() {
         return value == null ? "null" : value;
+    }
+
+    @Override
+    public String getValue() {
+        return value;
     }
 }

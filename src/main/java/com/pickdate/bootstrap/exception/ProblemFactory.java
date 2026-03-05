@@ -98,11 +98,12 @@ public final class ProblemFactory {
                 .build();
     }
 
-    public static Problem failedDependency(URI uri) {
+    public static Problem accessDenied(URI uri) {
         return ProblemDetails.builder()
-                .title("Failed Dependency")
-                .status(INTERNAL_SERVER_ERROR.value())
+                .title("Access Denied")
+                .status(FORBIDDEN.value())
                 .instance(uri.toString())
+                .detail("You do not have permission to access this resource.")
                 .build();
     }
 }

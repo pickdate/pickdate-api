@@ -1,7 +1,7 @@
 package com.pickdate.test.stub
 
+import com.pickdate.bootstrap.domain.Email
 import com.pickdate.bootstrap.domain.Identifier
-import com.pickdate.iam.domain.Email
 import com.pickdate.iam.domain.User
 import com.pickdate.iam.domain.UserRepository
 import org.springframework.data.domain.Page

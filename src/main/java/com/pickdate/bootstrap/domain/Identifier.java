@@ -4,18 +4,26 @@ import com.pickdate.bootstrap.validation.Assert;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import java.util.Objects;
+
 import static java.util.UUID.randomUUID;
 
 
-public record Identifier(String id) implements Value<String> {
+public class Identifier implements Value<String> {
 
-    public Identifier(String id) {
-        this.id = id == null ? null : id.strip();
-        validate(id);
+    private String id;
+
+    Identifier() {
+    }
+
+    private Identifier(String id) {
+        this.id = id;
     }
 
     public static Identifier of(String value) {
-        return new Identifier(value);
+        var id = value == null ? null : value.strip();
+        validate(id);
+        return new Identifier(id);
     }
 
     public static Identifier generate() {
@@ -28,12 +36,24 @@ public record Identifier(String id) implements Value<String> {
     }
 
     @Override
-    public String value() {
+    public String getValue() {
         return id;
     }
 
     @Override
     public @Nonnull String toString() {
         return id == null ? "null" : id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof Identifier that)) return false;
+        return Objects.equals(this.id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

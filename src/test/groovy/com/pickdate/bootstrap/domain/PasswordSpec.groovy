@@ -63,7 +63,7 @@ class PasswordSpec extends Specification {
 
     def "should trim whitespaces"() {
         expect:
-        new PlaintextPassword("  StrongPass1  ").value() == "StrongPass1"
+        new PlaintextPassword("  StrongPass1  ").value == "StrongPass1"
     }
 
     def "should reject password containing whitespace"() {
