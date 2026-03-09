@@ -36,7 +36,7 @@ public class DomainUrl implements Value<String> {
     DomainUrl() {
     }
 
-    public DomainUrl(String value) {
+    private DomainUrl(String value) {
         this.value = value;
     }
 

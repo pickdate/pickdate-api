@@ -35,7 +35,7 @@ class SetupApiMvcSpec extends MvcSpec implements JsonMapper {
                 .getResponse()
 
         then:
-        1 * applicationSetupUseCase.setupDomain(request.domainUrl)
+        1 * applicationSetupUseCase.setupDomain(request.createDomainUrl)
 
         and:
         response.status == 201

@@ -25,21 +25,21 @@ class RegisterParticipantRequest {
     @Nullable
     private String phone;
 
-    DisplayName getDisplayName() {
+    DisplayName toDisplayName() {
         return DisplayName.of(displayName);
     }
 
-    Email getEmail() {
+    Email toEmail() {
         return Email.ofNullable(email);
     }
 
-    Phone getPhone() {
+    Phone toPhone() {
         return Phone.ofNullable(phone);
     }
 
     public Participant toParticipant() {
-        return new Participant(getDisplayName())
-                .withEmail(getEmail())
-                .withPhone(getPhone());
+        return new Participant(toDisplayName())
+                .withEmail(toEmail())
+                .withPhone(toPhone());
     }
 }

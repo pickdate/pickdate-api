@@ -52,7 +52,7 @@ class PollApi {
             @PathVariable String pollId,
             @Valid @RequestBody CreateOptionRequest request
     ) {
-        var data = pollUseCase.addOption(Identifier.of(pollId), request.getRange(), request.isWholeDay());
+        var data = pollUseCase.addOption(Identifier.of(pollId), request.toRange(), request.isWholeDay());
         return ResponseEntity.status(CREATED).body(data);
     }
 

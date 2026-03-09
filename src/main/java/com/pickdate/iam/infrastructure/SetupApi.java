@@ -23,14 +23,14 @@ class SetupApi {
     @PostMapping("/domain")
     @Operation(summary = "Set public domain/origin for the application")
     ResponseEntity<Void> setupDomain(@RequestBody SetupDomainRequest request) {
-        applicationSetupUseCase.setupDomain(request.getDomainUrl());
+        applicationSetupUseCase.setupDomain(request.toDomainUrl());
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PostMapping("/user")
     @Operation(summary = "Create initial admin user")
     ResponseEntity<Void> initializeAdminUser(@RequestBody CreateUserRequest request) {
-        applicationSetupUseCase.setupAdmin(request.user());
+        applicationSetupUseCase.setupAdmin(request.toUser());
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 

@@ -10,7 +10,7 @@ record CreateUserRequest(
         String password
 ) {
 
-    public User user() {
+    public User toUser() {
         return new User(
                 Email.of(email),
                 Password.fromPlaintext(password)

@@ -68,6 +68,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 class SecurityConfiguration {
 
     private static final String[] ALLOW_LIST = {"/oauth2/token", "/userinfo"};
+    private static final String[] SETUP_ENDPOINTS = {"/api/v1/iam/setup/**"};
 
     private final UserDetailsService userDetailsService;
     private final ApplicationSetupUseCase applicationSetupUseCase;
@@ -101,6 +102,7 @@ class SecurityConfiguration {
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) {
         http
+                .csrf(csrf -> csrf.ignoringRequestMatchers(SETUP_ENDPOINTS))
                 .authorizeHttpRequests((authorize) -> authorize
                         .dispatcherTypeMatchers(FORWARD, ERROR).permitAll()
                         .requestMatchers("/").permitAll()
@@ -112,7 +114,7 @@ class SecurityConfiguration {
                                 "/actuator/health/**"
                         ).permitAll()
                         .requestMatchers("/reset-password").permitAll()
-                        .requestMatchers("/api/v1/iam/setup/**").access((authentication, _) -> {
+                        .requestMatchers(SETUP_ENDPOINTS).access((authentication, _) -> {
                             if (!applicationSetupUseCase.setupCompleted()) {
                                 return new AuthorizationDecision(true);
                             }

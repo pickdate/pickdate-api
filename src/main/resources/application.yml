@@ -33,6 +33,11 @@ spring:
     default-schema: pickdate
     create-schemas: true
 
+  modulith:
+    events:
+      jdbc:
+        schema: pickdate
+
 logback:
   log:
     dir: /app/logs

@@ -23,7 +23,7 @@ class CreateOptionRequest {
 
     private Boolean wholeDay = false;
 
-    TimeRange getRange() {
+    TimeRange toRange() {
         return new TimeRange(startAt.toInstant(), endAt.toInstant());
     }
 

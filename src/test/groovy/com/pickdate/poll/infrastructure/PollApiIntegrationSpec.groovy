@@ -101,7 +101,7 @@ class PollApiIntegrationSpec extends Specification implements PollApiTrait {
         def poll = pollUseCase.getPoll(Identifier.of(pollId))
 
         poll.participants().find {
-            it.name() == req.displayName.value
+            it.name() == req.toDisplayName.value
         }
     }
 }

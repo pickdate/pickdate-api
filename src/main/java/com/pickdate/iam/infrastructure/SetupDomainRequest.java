@@ -6,7 +6,7 @@ record SetupDomainRequest(
         String domain
 ) {
 
-    public DomainUrl getDomainUrl() {
-        return new DomainUrl(domain);
+    public DomainUrl toDomainUrl() {
+        return DomainUrl.of(domain);
     }
 }
